@@ -3504,3 +3504,22 @@ header{
 /*.item-group-notification-content .item-schedule:last-child {*/
 /*    border-bottom: unset;*/
 /*}*/
+.error{
+    color: red;
+}
+.success{
+    color: green;
+}
+.group-btn{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.item-schedule-content-detail-title{
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e1e44;
+}
+.group-btn{
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}

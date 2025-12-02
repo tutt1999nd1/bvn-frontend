@@ -182,6 +182,7 @@ const API_MAP = {
     SCHEDULE_GET_DETAIL:API_DOMAIN+"schedule/detail",
     SCHEDULE_CREATE:API_DOMAIN+"schedule/create",
     SCHEDULE_UPDATE:API_DOMAIN+"schedule/update",
+    SCHEDULE_UPDATE_STATUS:API_DOMAIN+"schedule/update-status",
     SCHEDULE_DELETE:API_DOMAIN+"schedule/delete",
 }
 export default API_MAP;

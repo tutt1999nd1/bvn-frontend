@@ -1,6 +1,6 @@
 import DialogContent from "@mui/material/DialogContent";
-import {Autocomplete, Backdrop, Button, CircularProgress, TextField} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import {Autocomplete, Backdrop, Button, CircularProgress, InputAdornment, TextField} from "@mui/material";
+import React, {useContext, useEffect, useState} from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
@@ -12,32 +12,73 @@ import {Form, Formik} from "formik";
 import apiCategory from "../../api/category";
 import * as yup from "yup";
 import {convertToAutoComplete} from "../../constants/common";
+import {ScheduleContext} from "./index";
+import {NumericFormat} from "react-number-format";
+import Checkbox from '@mui/material/Checkbox';
+import apiSchedule from "../../api/schedule";
+import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import apiUser from "../../api/user";
 
 export default function ModalEdit(props) {
-    const {openModal, handleCloseModal} = props
     const navigate = useNavigate();
-    const [listTypeExpense, setListTypeExpense] = useState([]);
     const [listScheduleStatus, setListScheduleStatus] = useState([]);
+    const {
+        idUpdate,
+        isUpdate,
+        setInfoDetail,
+        openModalEdit,
+        handleCloseModalEdit,
+        setIsFresh,infoUpdate,setInfoUpdate
+    } = useContext(ScheduleContext);
+    const [listUser, setListUser] = useState([]);
+    const [listDocumentType, setListDocumentType] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const initialInfo = {
-        "description": "",
-        "feedback": "",
-        "scheduleStatus": {
+        "name": "",
+        "referralSource": "",
+        "date": new dayjs(),
+        "address":"",
+        "description":"",
+        "contact":"",
+        "notary": {
             id: "",
             name: ""
+        },
+        "secretary": {
+            id: "",
+            name: ""
+        },
+        "documentType": {
+            id: "",
+            code: ""
         },
 
 
     };
     const [info, setInfo] = useState(initialInfo)
-    useEffect(()=>{
-        if(!openModal){
-            setInfo(initialInfo)
+    useEffect(() => {
+        if (!openModalEdit) {
+            setInfoUpdate(initialInfo)
         }
-    },[openModal])
+    }, [openModalEdit])
+    useEffect(() => {
+        setInfo(infoUpdate)
+    }, [infoUpdate])
     const validationSchema = yup.object({
-
+        name: yup
+            .string()
+            .trim()
+            .required('Không được để trống'),
+        secretaryId: yup
+            .string()
+            .trim()
+            .required('Không được để trống'),
+        notaryId: yup
+            .string()
+            .trim()
+            .required('Không được để trống'),
 
     });
     const backList = () => {
@@ -45,29 +86,54 @@ export default function ModalEdit(props) {
     }
 
 
+
     useEffect(() => {
         getCategoryApi({paging: false, type: "ScheduleStatus"}).then((r) => {
             setListScheduleStatus(convertToAutoComplete(r.data.responses, 'name'))
+        })
+        getCategoryApi({paging: false, type: "DocumentType"}).then((r) => {
+            setListDocumentType(convertToAutoComplete(r.data.responses, 'name'))
+        })
+        getListUserApi({paging: false}).then((r) => {
+            setListUser(convertToAutoComplete(r.data.responses, 'fullName'))
         })
 
 
     }, [])
 
-    const getCarApi = (body) => {
-        // return apiCar.searchCar(body)
+    const getListUserApi = (body) => {
+        return apiUser.getListUser(body);
     }
 
     const submitForm = (value) => {
-        // updateApi({}).then((r) => {
-        //     toast.success("Cập nhật thành công");
-        //     setLoading(false)
-        //     // back()
-        //     handleCloseModal()
-        // }).catch(e => {
-        //     setLoading(false)
-        //     handleCloseModal()
-        //     toast.error("Có lỗi xảy ra")
-        // })
+        if (isUpdate) {
+            updateApi(value).then((r) => {
+                toast.success("Cập nhật thành công");
+                setIsFresh(e=>!e)
+                handleCloseModalEdit()
+            }).catch(e => {
+                toast("Có lỗi xảy ra")
+                handleCloseModalEdit()
+                console.log(e)
+            })
+        } else {
+            createApi(value).then((r) => {
+                toast.success("Thêm mới thành công");
+                handleCloseModalEdit()
+                setIsFresh(e=>!e)
+            }).catch(e => {
+                toast("Có lỗi xảy ra")
+                handleCloseModalEdit()
+                console.log(e)
+            })
+        }
+
+    }
+    const createApi = (body) => {
+        return apiSchedule.create(body)
+    }
+    const updateApi = (body) => {
+        return apiSchedule.update(body)
     }
 
     const back = () => {
@@ -76,7 +142,9 @@ export default function ModalEdit(props) {
     const getCategoryApi = (body) => {
         return apiCategory.getCategory(body)
     }
-
+    const updateScheduleStatus = (body) => {
+        return apiSchedule.updateStatus(body)
+    }
 
 
     return (
@@ -85,7 +153,7 @@ export default function ModalEdit(props) {
                 // style: {
                 //     height: '100%', // Set the height to 100% to make it full height
                 // },
-            }} fullWidth open={openModal} onClose={handleCloseModal} maxWidth={'md'}>
+            }} fullWidth open={openModalEdit} onClose={handleCloseModalEdit} maxWidth={'md'}>
                 <Backdrop
                     sx={{color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1}}
                     open={loading}
@@ -94,10 +162,10 @@ export default function ModalEdit(props) {
                     <CircularProgress color="inherit"/>
                 </Backdrop>
                 <DialogTitle>
-                    <div className={'vmp-tittle'}>Cập nhật trạng thái</div>
+                    <div className={'vmp-tittle'}>{!isUpdate?'Thêm mới lịch hẹn':'Cập nhật lịch hẹn'}</div>
                     <IconButton
                         aria-label="close"
-                        onClick={handleCloseModal}
+                        onClick={handleCloseModalEdit}
                         sx={{
                             position: 'absolute',
                             right: 0,
@@ -123,10 +191,25 @@ export default function ModalEdit(props) {
                                 enableReinitialize
                                 initialValues={{
                                     "id": info.id,
+                                    "name": info.name,
+                                    "customerName": info.customerName||"",
+                                    "referralSource": info.referralSource,
+                                    "feesNotary": info.feesNotary,
+                                    "feesTransportation": info.feesTransportation,
+                                    "feesCopy": info.feesCopy,
+                                    "feesCollection": info.feesCollection,
                                     "description": info.description,
-                                    "scheduleStatusId": info.scheduleStatus?.id,
-                                    "scheduleStatusName": info.scheduleStatus?.name,
-
+                                    "address":info.address,
+                                    "contact":info.contact,
+                                    "date": isUpdate ? dayjs(info.date) : info.date,
+                                    "scheduleStatusId": info.scheduleStatus?.id||"",
+                                    "scheduleStatusName": info.scheduleStatus?.name||"",
+                                    "documentTypeId": info.documentType?.id||"",
+                                    "documentTypeName": info.documentType?.name||"",
+                                    "notaryId": info.notary?.id||"",
+                                    "notaryName": info.notary?.fullName||"",
+                                    "secretaryId": info.secretary?.id||"",
+                                    "secretaryName": info.secretary?.fullName||"",
 
                                 }}
                                 validationSchema={validationSchema}
@@ -148,63 +231,240 @@ export default function ModalEdit(props) {
                                     return (
                                         <Form onSubmit={handleSubmit}>
 
-
                                             <div className={'form-input'}>
-                                                <div className={'label-input'}>Trạng thái<span className={'error-message'}>*</span></div>
+                                                <div className={'label-input'}>Tên hồ sơ
+                                                    <span className={'error-message'}>*</span>
+                                                </div>
+                                                <div className={'row-input-field'}>
+                                                    <TextField
+                                                        size={"small"}
+                                                        id='name'
+                                                        name='name'
+                                                        className={'formik-input'}
+                                                        // variant="standard"
+                                                        value={values.name}
+                                                        onChange={handleChange}
+                                                        error={touched.name && Boolean(errors.name)}
+                                                        helperText={touched.name && errors.name}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Nguồn việc</div>
+                                                <div className={'row-input-field'}>
+                                                    <TextField
+                                                        size={"small"}
+                                                        id='referralSource'
+                                                        name='referralSource'
+                                                        className={'formik-input'}
+                                                        // variant="standard"
+                                                        value={values.referralSource}
+                                                        onChange={handleChange}
+                                                        error={touched.referralSource && Boolean(errors.referralSource)}
+                                                        helperText={touched.referralSource && errors.referralSource}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Loại việc</div>
                                                 <div className={'row-input-field'}>
                                                     <Autocomplete
-                                                        // disablePortal
+                                                        disablePortal
                                                         id="combo-box-demo"
-                                                        options={listScheduleStatus}
+                                                        options={listDocumentType}
                                                         value={{
-                                                            id: values.scheduleStatusId,
-                                                            label: values.scheduleStatusName
+                                                            id: values.documentTypeId,
+                                                            label: values.documentTypeName
                                                         }
                                                         }
 
                                                         renderInput={(params) => < TextField  {...params}
-                                                                                              id='scheduleStatusId'
-                                                                                              name='scheduleStatusId'
+                                                                                              id='documentTypeId'
+                                                                                              name='documentTypeId'
                                                                                               placeholder=""
-                                                                                              error={touched.scheduleStatusId && Boolean(errors.scheduleStatusId)}
-                                                                                              helperText={touched.scheduleStatusId && errors.scheduleStatusId}/>}
+                                                                                              error={touched.documentTypeId && Boolean(errors.documentTypeId)}
+                                                                                              helperText={touched.documentTypeId && errors.documentTypeId}/>}
                                                         size={"small"}
                                                         onChange={(event, newValue) => {
                                                             if (newValue) {
-                                                                setFieldValue('scheduleStatusId', newValue.id)
-                                                                setFieldValue('scheduleStatusName', newValue.label)
+                                                                setFieldValue('documentTypeId', newValue.id)
+                                                                setFieldValue('documentTypeName', newValue.label)
 
                                                             } else {
-                                                                setFieldValue('scheduleStatusId', '')
-                                                                setFieldValue('scheduleStatusName', '')
+                                                                setFieldValue('documentTypeId', '')
+                                                                setFieldValue('documentTypeName', '')
 
                                                             }
                                                         }}
                                                     />
                                                 </div>
-
                                             </div>
                                             <div className={'form-input'}>
-                                                <div className={'label-input'}>Phản hồi</div>
+                                                <div className={'label-input'}>Công chứng viên
+                                                    <span className={'error-message'}>*</span>
+                                                </div>
+                                                <div className={'row-input-field'}>
+                                                    <Autocomplete
+                                                        disablePortal
+                                                        id="combo-box-demo"
+                                                        options={listUser}
+                                                        value={{
+                                                            id: values.notaryId,
+                                                            label: values.notaryName
+                                                        }
+                                                        }
+
+                                                        renderInput={(params) => < TextField  {...params}
+                                                                                              id='notaryId'
+                                                                                              name='notaryId'
+                                                                                              placeholder=""
+                                                                                              error={touched.notaryId && Boolean(errors.notaryId)}
+                                                                                              helperText={touched.notaryId && errors.notaryId}/>}
+                                                        size={"small"}
+                                                        onChange={(event, newValue) => {
+                                                            if (newValue) {
+                                                                setFieldValue('notaryId', newValue.id)
+                                                                setFieldValue('notaryName', newValue.label)
+
+                                                            } else {
+                                                                setFieldValue('notaryId', '')
+                                                                setFieldValue('notaryName', '')
+
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Thư ký
+                                                    <span className={'error-message'}>*</span>
+                                                </div>
+                                                <div className={'row-input-field'}>
+                                                    <Autocomplete
+                                                        disablePortal
+                                                        id="combo-box-demo"
+                                                        options={listUser}
+                                                        value={{
+                                                            id: values.secretaryId,
+                                                            label: values.secretaryName
+                                                        }
+                                                        }
+
+                                                        renderInput={(params) => < TextField  {...params}
+                                                                                              id='secretaryId'
+                                                                                              name='secretaryId'
+                                                                                              placeholder=""
+                                                                                              error={touched.secretaryId && Boolean(errors.secretaryId)}
+                                                                                              helperText={touched.secretaryId && errors.secretaryId}/>}
+                                                        size={"small"}
+                                                        onChange={(event, newValue) => {
+                                                            if (newValue) {
+                                                                setFieldValue('secretaryId', newValue.id)
+                                                                setFieldValue('secretaryName', newValue.label)
+
+                                                            } else {
+                                                                setFieldValue('secretaryId', '')
+                                                                setFieldValue('secretaryName', '')
+
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Thời gian</div>
+                                                <div className={'row-input-field'}>
+                                                    <LocalizationProvider style={{width: '100%'}}
+                                                                          dateAdapter={AdapterDayjs}>
+                                                        <DateTimePicker
+                                                            className={'new-date-apply'}
+                                                            style={{width: '100% !important', height: '30px'}}
+                                                            inputFormat="HH:mm:ss DD-MM-YYYY"
+                                                            referenceDate={dayjs('2022-04-17T15:30')}
+
+                                                            value={values.date}
+                                                            onChange={value => props.setFieldValue("date", value)}
+                                                            error={touched.date && Boolean(errors.date)}
+                                                            // error={touchSubmit && dayjs(values.founding_date).format('DD-MM-YYYY') == "Invalid Date"}
+                                                            helperText={touched.date && errors.date}
+                                                            renderInput={(params) => <TextField size={"small"}
+                                                                                                fullWidth {...params} />}
+                                                        />
+                                                        {/*<DateTimePicker*/}
+                                                        {/*    label="Responsive"*/}
+                                                        {/*    renderInput={(params) => <TextField {...params} />}*/}
+                                                        {/*    value={value}*/}
+                                                        {/*    onChange={(newValue) => {*/}
+                                                        {/*        setValue(newValue);*/}
+                                                        {/*    }}*/}
+                                                        {/*/>*/}
+                                                        {/*<DesktopDateTimePicker defaultValue={dayjs('2022-04-17T15:30')} />*/}
+                                                    </LocalizationProvider>
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Ghi chú</div>
                                                 <div className={'row-input-field'}>
                                                     <TextField
                                                         multiline
-                                                        rows={3}
+                                                        rows={2}
                                                         size={"small"}
-                                                        id='feedback'
-                                                        name='feedback'
+                                                        id='description'
+                                                        name='description'
                                                         className={'formik-input'}
                                                         // variant="standard"
-                                                        value={values.feedback}
+                                                        value={values.description}
                                                         onChange={handleChange}
-                                                        error={touched.feedback && Boolean(errors.feedback)}
-                                                        helperText={touched.feedback && errors.feedback}
+                                                        error={touched.description && Boolean(errors.description)}
+                                                        helperText={touched.description && errors.description}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Địa chỉ</div>
+                                                <div className={'row-input-field'}>
+                                                    <TextField
+                                                        multiline
+                                                        rows={2}
+                                                        size={"small"}
+                                                        id='address'
+                                                        name='address'
+                                                        className={'formik-input'}
+                                                        // variant="standard"
+                                                        value={values.address}
+                                                        onChange={handleChange}
+                                                        error={touched.address && Boolean(errors.address)}
+                                                        helperText={touched.address && errors.address}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={'form-input'}>
+                                                <div className={'label-input'}>Thông tin liên hệ</div>
+                                                <div className={'row-input-field'}>
+                                                    <TextField
+                                                        multiline
+                                                        rows={2}
+                                                        size={"small"}
+                                                        id='contact'
+                                                        name='contact'
+                                                        className={'formik-input'}
+                                                        // variant="standard"
+                                                        value={values.contact}
+                                                        onChange={handleChange}
+                                                        error={touched.contact && Boolean(errors.contact)}
+                                                        helperText={touched.contact && errors.contact}
                                                     />
                                                 </div>
                                             </div>
                                             <div className={''}
-                                                 style={{display: "flex", justifyContent: "center", marginTop: '10px'}}>
-                                                <Button style={{marginRight: '10px'}} onClick={()=>{handleCloseModal()}}
+                                                 style={{
+                                                     display: "flex",
+                                                     justifyContent: "center",
+                                                     marginTop: '10px'
+                                                 }}>
+                                                <Button style={{marginRight: '10px'}} onClick={() => {
+                                                    handleCloseModalEdit()
+                                                }}
                                                         variant="outlined">Hủy</Button>
 
                                                 <Button variant="contained"

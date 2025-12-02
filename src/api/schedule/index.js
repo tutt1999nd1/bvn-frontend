@@ -18,6 +18,9 @@ class ApiSchedule{
     update= (body) => {
         return axiosClient.post(API_MAP.SCHEDULE_UPDATE,body)
     }
+    updateStatus= (body) => {
+        return axiosClient.post(API_MAP.SCHEDULE_UPDATE_STATUS,body)
+    }
     delete= (body) => {
         return axiosClient.post(API_MAP.SCHEDULE_DELETE,body)
     }

@@ -12,10 +12,11 @@ export default function ItemGroupSchedule(props) {
     },[])
 
     const formatDateRelative = (dateString) => {
-        const targetDate = new Date(dateString);
-        const today = new Date();
+        console.log("dateString",dateString)
+        const targetDate = moment(dateString,'YYYY-MM-DD').startOf('day');
+        const today = moment().startOf('day'); // Dùng ngày hiện tại
 
-        const diffInDays = Math.floor((today - targetDate) / (1000 * 60 * 60 * 24));
+        const diffInDays = today.diff(targetDate, 'days');
 
         if (diffInDays === 0) {
             return "Hôm nay";
@@ -27,8 +28,10 @@ export default function ItemGroupSchedule(props) {
             return "Ngày mai";
         } else if (diffInDays < -1) {
             return `${Math.abs(diffInDays)} ngày sau`;
+        } else {
+            return "Ngày không xác định"; // Trường hợp chưa xử lý
         }
-    }
+    };
     return <div className={`item-group-notification` }>
         <div className={'item-group-notification-header'}>
             <div className={'item-group-notification-header-date'}>{item.date}</div>
