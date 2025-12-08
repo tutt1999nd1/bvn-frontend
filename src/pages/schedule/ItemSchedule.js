@@ -187,7 +187,7 @@ export default function ItemSchedule(props) {
                         {/*</Grid>*/}
                         <Grid item xs={12}>
                             <div className={'row-detail'}>
-                                <div className={'row-detail-label'}>Địa chỉ:</div>
+                                <div className={'row-detail-label'}>Địa điểm ký:</div>
                                 <div className={'row-detail-info'}>
                                     {item.address}
                                 </div>
