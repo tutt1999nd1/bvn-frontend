@@ -33,14 +33,15 @@ export default function ModalEdit(props) {
     } = useContext(ScheduleContext);
     const [listUser, setListUser] = useState([]);
     const [listDocumentType, setListDocumentType] = useState([]);
+    const [listReferralSource, setListReferralSource] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const initialInfo = {
         "name": "",
-        "referralSource": "",
         "date": new dayjs(),
         "address":"",
         "description":"",
+        "certificateNumber":"",
         "contact":"",
         "notary": {
             id: "",
@@ -54,7 +55,10 @@ export default function ModalEdit(props) {
             id: "",
             code: ""
         },
-
+        "referralSource": {
+            id: "",
+            name: ""
+        },
 
     };
     const [info, setInfo] = useState(initialInfo)
@@ -97,6 +101,9 @@ export default function ModalEdit(props) {
         getListUserApi({paging: false}).then((r) => {
             setListUser(convertToAutoComplete(r.data.responses, 'fullName'))
         })
+        getCategoryApi({paging: false, type: "ReferralSource"}).then((r) => {
+            setListReferralSource(convertToAutoComplete(r.data.responses, 'name'))
+        })
 
 
     }, [])
@@ -106,6 +113,7 @@ export default function ModalEdit(props) {
     }
 
     const submitForm = (value) => {
+        alert("tutt")
         if (isUpdate) {
             updateApi(value).then((r) => {
                 toast.success("Cập nhật thành công");
@@ -193,7 +201,6 @@ export default function ModalEdit(props) {
                                     "id": info.id,
                                     "name": info.name,
                                     "customerName": info.customerName||"",
-                                    "referralSource": info.referralSource,
                                     "feesNotary": info.feesNotary,
                                     "feesTransportation": info.feesTransportation,
                                     "feesCopy": info.feesCopy,
@@ -210,7 +217,8 @@ export default function ModalEdit(props) {
                                     "notaryName": info.notary?.fullName||"",
                                     "secretaryId": info.secretary?.id||"",
                                     "secretaryName": info.secretary?.fullName||"",
-
+                                    "referralSourceId": info.referralSource?.id||"",
+                                    "referralSourceName": info.referralSource?.name||"",
                                 }}
                                 validationSchema={validationSchema}
                                 onSubmit={
@@ -232,7 +240,7 @@ export default function ModalEdit(props) {
                                         <Form onSubmit={handleSubmit}>
 
                                             <div className={'form-input'}>
-                                                <div className={'label-input'}>Tên hồ sơ
+                                                <div className={'label-input'}>Tên khách hàng
                                                     <span className={'error-message'}>*</span>
                                                 </div>
                                                 <div className={'row-input-field'}>
@@ -241,6 +249,7 @@ export default function ModalEdit(props) {
                                                         id='name'
                                                         name='name'
                                                         className={'formik-input'}
+
                                                         // variant="standard"
                                                         value={values.name}
                                                         onChange={handleChange}
@@ -252,16 +261,34 @@ export default function ModalEdit(props) {
                                             <div className={'form-input'}>
                                                 <div className={'label-input'}>Nguồn việc</div>
                                                 <div className={'row-input-field'}>
-                                                    <TextField
+                                                    <Autocomplete
+                                                        disablePortal
+                                                        id="combo-box-demo"
+                                                        options={listReferralSource}
+                                                        value={{
+                                                            id: values.referralSourceId,
+                                                            label: values.referralSourceName
+                                                        }
+                                                        }
+
+                                                        renderInput={(params) => < TextField  {...params}
+                                                                                              id='referralSourceId'
+                                                                                              name='referralSourceId'
+                                                                                              placeholder=""
+                                                                                              error={touched.referralSourceId && Boolean(errors.referralSourceId)}
+                                                                                              helperText={touched.referralSourceId && errors.referralSourceId}/>}
                                                         size={"small"}
-                                                        id='referralSource'
-                                                        name='referralSource'
-                                                        className={'formik-input'}
-                                                        // variant="standard"
-                                                        value={values.referralSource}
-                                                        onChange={handleChange}
-                                                        error={touched.referralSource && Boolean(errors.referralSource)}
-                                                        helperText={touched.referralSource && errors.referralSource}
+                                                        onChange={(event, newValue) => {
+                                                            if (newValue) {
+                                                                setFieldValue('referralSourceId', newValue.id)
+                                                                setFieldValue('referralSourceName', newValue.label)
+
+                                                            } else {
+                                                                setFieldValue('referralSourceId', '')
+                                                                setFieldValue('referralSourceName', '')
+
+                                                            }
+                                                        }}
                                                     />
                                                 </div>
                                             </div>
@@ -421,7 +448,7 @@ export default function ModalEdit(props) {
                                                 </div>
                                             </div>
                                             <div className={'form-input'}>
-                                                <div className={'label-input'}>Địa chỉ</div>
+                                                <div className={'label-input'}>Địa điểm ký</div>
                                                 <div className={'row-input-field'}>
                                                     <TextField
                                                         multiline

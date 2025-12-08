@@ -106,7 +106,7 @@ export default function Login() {
                     return (
                         <Form onSubmit={handleSubmit}>
                             <div className="login-logo">
-                                <img src={require('../../../assets/img/new-logo.png')} alt="Logo"/>
+                                <img src={require('../../../assets/img/logotron.png')} alt="Logo"/>
                             </div>
                             {
                                 isLocal?   <div className={"login-title"}>

@@ -51,7 +51,7 @@ export default function Nav() {
         <nav className={`sidebar`}>
             <div className={'logo'}>
                 <a href={'#'}><img style={{width: '100%'}}
-                                   src={require('../assets/img/logo-white.png')}/></a>
+                                   src={require('../assets/img/logodai.png')}/></a>
 
             </div>
             {currentUser.isSignIn?'':<Box sx={{display:'flex',justifyContent:'center'}}>

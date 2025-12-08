@@ -21,8 +21,11 @@ export default function ItemSchedule(props) {
 
     }
     useEffect(()=>{
-        setOpenExpand(false)
+        // setOpenExpand(false)
     },[isFresh])
+    useEffect(()=>{
+        console.log("tutt item",item)
+    },[item])
     const openDetail = () => {
         setInfoDetail(item)
         setOpenModalUpdate(true)
@@ -88,7 +91,7 @@ export default function ItemSchedule(props) {
                     <Grid container spacing={1} sx={{marginTop:'5px'}}>
                         <Grid item xs={12}>
                             <div className={'row-detail'}>
-                                <div className={'row-detail-label'}>Tên hồ sơ:</div>
+                                <div className={'row-detail-label'}>Tên khách hàng:</div>
                                 <div className={'row-detail-info'}>
                                     {item.name}
                                 </div>
@@ -115,7 +118,7 @@ export default function ItemSchedule(props) {
                                 <div className={'row-detail'}>
                                     <div className={'row-detail-label'}>Số công chứng:</div>
                                     <div className={'row-detail-info'}>
-                                        {item.certificateNumber.id}
+                                        {item.certificateNumber}
                                     </div>
                                 </div>
                             </Grid> : ''
@@ -149,7 +152,7 @@ export default function ItemSchedule(props) {
                                     </Grid>
                                     <Grid item xs={12}>
                                         <div className={'row-detail'}>
-                                            <div className={'row-detail-label'}>Phí di chuyển:</div>
+                                            <div className={'row-detail-label'}>Phí ký ngoài:</div>
                                             <div className={'row-detail-info'}>
                                                 {currencyFormatter(item.feesTransportation)}
                                             </div>

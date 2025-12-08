@@ -20,6 +20,8 @@ import apiSchedule from "../../api/schedule";
 export default function ModalUpdateStatus(props) {
     const navigate = useNavigate();
     const [listTypeExpense, setListTypeExpense] = useState([]);
+    const [existCertificateNumber, setExistCertificateNumber] = useState(false)
+    const [currentCertificateNumber, setCurrentExistCertificateNumber] = useState("")
     const [listScheduleStatus, setListScheduleStatus] = useState([]);
     const {
         infoDetail,
@@ -35,10 +37,11 @@ export default function ModalUpdateStatus(props) {
         "description": "",
         "feedback": "",
         "isPaid": false,
-        "feesNotary":"",
-        "feesTransportation":"",
-        "feesCopy":"",
-        "feesCollection":"",
+        "isHandOver": false,
+        "feesNotary": "",
+        "feesTransportation": "",
+        "feesCopy": "",
+        "feesCollection": "",
         "scheduleStatus": {
             id: "",
             name: "",
@@ -50,9 +53,18 @@ export default function ModalUpdateStatus(props) {
     useEffect(() => {
         if (!openModalUpdate) {
             setInfoDetail(initialInfo)
+            setExistCertificateNumber(false)
+            // setCurrentExistCertificateNumber("")
         }
     }, [openModalUpdate])
-    const validationSchema = yup.object({});
+
+    const validationSchema = yup.object({
+        certificateNumber: yup
+            .string()
+            .trim()
+            .required('Không được để trống'),
+
+    });
     const backList = () => {
         window.history.back();
     }
@@ -74,19 +86,32 @@ export default function ModalUpdateStatus(props) {
     const getCarApi = (body) => {
         // return apiCar.searchCar(body)
     }
+    useEffect(() => {
+        console.log("currentCertificateNumber", currentCertificateNumber)
+    }, [currentCertificateNumber])
 
     const submitForm = (value) => {
+        // setExistCertificateNumber(false)
+        // return
         updateScheduleStatus(value).then((r) => {
+            setExistCertificateNumber(false)
+
             toast.success("Cập nhật thành công");
             setLoading(false)
             // back()
-            setIsFresh(e=>!e)
+            setIsFresh(e => !e)
             handleCloseModal()
         }).catch(e => {
-            setLoading(false)
-            handleCloseModal()
-            setIsFresh(e=>!e)
-            toast.error("Có lỗi xảy ra")
+            setExistCertificateNumber(true)
+
+            if (e.response?.data?.status?.code == "certificate_number_already_exist") {
+                setCurrentExistCertificateNumber(value.certificateNumber)
+                setExistCertificateNumber(true)
+            }
+            // setLoading(false)
+            // handleCloseModal()
+            // setIsFresh(e => !e)
+            // toast.error("Có lỗi xảy ra")
         })
     }
 
@@ -145,10 +170,12 @@ export default function ModalUpdateStatus(props) {
                                 enableReinitialize
                                 initialValues={{
                                     "id": info.id,
+                                    "certificateNumber": info.certificateNumber,
                                     "description": info.description,
                                     "scheduleStatusId": info.scheduleStatus?.id,
                                     "scheduleStatusName": info.scheduleStatus?.name,
                                     "isPaid": info.isPaid,
+                                    "isHandOver": info.isHandOver,
                                     "feedback": info.feedback,
                                     "feesNotary": info.feesNotary,
                                     "feesTransportation": info.feesTransportation,
@@ -220,6 +247,41 @@ export default function ModalUpdateStatus(props) {
                                                 values.scheduleStatusCode == "done" ?
                                                     <>
                                                         <div className={'form-input'}>
+                                                            <div className={'label-input'}>Số công chứng
+                                                                <span className={'error-message'}>*</span>
+                                                            </div>
+                                                            <div className={'row-input-field'}>
+                                                                <TextField
+                                                                    size={"small"}
+                                                                    id='certificateNumber'
+                                                                    name='certificateNumber'
+                                                                    className={'formik-input'}
+                                                                    type="tel"
+                                                                    InputProps={{
+                                                                        inputMode: 'numeric', // hỗ trợ cho bàn phím số
+                                                                        pattern: '[0-9]*', // mẫu cho số
+                                                                    }}
+                                                                    value={values.certificateNumber}
+                                                                    onChange={(value) => {
+
+                                                                        if(currentCertificateNumber!=""){
+                                                                            if(value.target.value==currentCertificateNumber){
+                                                                                setExistCertificateNumber(true)
+                                                                            }else {
+                                                                                setExistCertificateNumber(false)
+
+                                                                            }
+                                                                        }
+                                                                        setFieldValue('certificateNumber', value.target.value)
+                                                                    }}
+                                                                    error={(touched.certificateNumber && Boolean(errors.certificateNumber)) || existCertificateNumber}
+                                                                    helperText={
+                                                                        (touched.certificateNumber && errors.certificateNumber) || (existCertificateNumber ? "Số chứng thư đã tồn tại" : "")
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className={'form-input'}>
                                                             <div className={'label-input'}>Phí công chứng</div>
                                                             <div className={'row-input-field'}>
                                                                 <NumericFormat
@@ -252,7 +314,7 @@ export default function ModalUpdateStatus(props) {
                                                             </div>
                                                         </div>
                                                         <div className={'form-input'}>
-                                                            <div className={'label-input'}>Phí di chuyển</div>
+                                                            <div className={'label-input'}>Phí ký ngoài</div>
                                                             <div className={'row-input-field'}>
                                                                 <NumericFormat
                                                                     id='feesTransportation'
@@ -350,14 +412,41 @@ export default function ModalUpdateStatus(props) {
                                                                 />
                                                             </div>
                                                         </div>
-                                                        <div className={'form-input'} style={{display:'flex',alignItems:'center'}}>
-                                                            <div className={'label-input'}>Đã nộp</div>
+                                                        <div className={'form-input'}
+                                                             style={{display: 'flex', alignItems: 'center'}}>
+                                                            <div className={'label-input'} style={{cursor: 'pointer'}}
+                                                                 onClick={() => {
+                                                                     setFieldValue('isPaid', !values.isPaid)
+                                                                 }
+                                                                 }>Khách đã nộp
+                                                            </div>
                                                             <div className={'row-input-field'}>
                                                                 <Checkbox
                                                                     checked={values.isPaid}
-                                                                    onChange={(event,checked) => {
+                                                                    onChange={(event, checked) => {
                                                                         console.log(checked)
                                                                         setFieldValue('isPaid', checked)
+
+                                                                    }
+                                                                    }
+                                                                    inputProps={{'aria-label': 'controlled'}}></Checkbox>
+                                                            </div>
+                                                        </div>
+                                                        <div className={'form-input'}
+                                                             style={{display: 'flex', alignItems: 'center'}}>
+                                                            <div className={'label-input'} style={{cursor: 'pointer'}}
+                                                                 onClick={() => {
+                                                                     setFieldValue('isHandOver', !values.isHandOver)
+                                                                 }
+                                                                 }
+                                                            >Đã bàn giao hồ sơ lưu cho văn thư
+                                                            </div>
+                                                            <div className={'row-input-field'}>
+                                                                <Checkbox
+                                                                    checked={values.isHandOver}
+                                                                    onChange={(event, checked) => {
+                                                                        console.log(checked)
+                                                                        setFieldValue('isHandOver', checked)
 
                                                                     }
                                                                     }

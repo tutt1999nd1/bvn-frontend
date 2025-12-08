@@ -153,7 +153,7 @@ export default function SchedulePage () {
                                         alignItems:'center',
                                         color:'#1976d2'
                                     }}>
-                                        <AddIcon onClick={()=>{setOpenModalEdit(true)}}/>
+                                        <AddIcon onClick={()=>{setIsUpdate(false);setOpenModalEdit(true)}}/>
                                     </div>
                                 </div>
                                 <Divider sx={{marginTop:'10px'}}></Divider>

@@ -170,7 +170,7 @@ export default function Header2() {
                             <div className={'header-logo'} sx={{display: {xs: 'flex', md: 'none'}, mr: 1}}>
                                 <a href={'/schedule'}>
                                     <img style={{width: '100%'}}
-                                         src={require('../assets/img/logo-white.png')}/></a>
+                                         src={require('../assets/img/logodai.png')}/></a>
                             </div>
                         </Box>
 
@@ -216,7 +216,7 @@ export default function Header2() {
                             <div className={'header-logo'} sx={{display: {xs: 'flex', md: 'none'}, mr: 1}}>
                                 <a href={'/schedule'}>
                                     <img style={{width: '100%'}}
-                                         src={require('../assets/img/logo-white.png')}/></a>
+                                         src={require('../assets/img/logodai.png')}/></a>
                             </div>
                         </Box>
 
